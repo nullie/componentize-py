@@ -23,7 +23,7 @@ use {
     },
     wasmtime_wasi::{
         pipe::{MemoryInputPipe, MemoryOutputPipe},
-        DirPerms, FilePerms, WasiCtx, WasiCtxBuilder, WasiView,
+        DirPerms, FilePerms, HostMonotonicClock, HostWallClock, WasiCtx, WasiCtxBuilder, WasiView,
     },
     wit_parser::{Resolve, TypeDefKind, UnresolvedPackageGroup, WorldId, WorldItem, WorldKey},
 };
@@ -351,6 +351,11 @@ pub async fn componentize(
     wasi.stdin(MemoryInputPipe::new(Bytes::new()))
         .stdout(stdout.clone())
         .stderr(stderr.clone())
+        .insecure_random_seed(0)
+        .insecure_random(rand_pcg::Pcg64Mcg::new(0))
+        .secure_random(rand_pcg::Pcg64Mcg::new(0))
+        .wall_clock(ConstHostWallClock {})
+        .monotonic_clock(ConstHostMonotonicClock {})
         .env("PYTHONUNBUFFERED", "1")
         .env("COMPONENTIZE_PY_APP_NAME", app_name)
         .env("PYTHONHOME", "/python")
@@ -690,4 +695,28 @@ fn is_wasip2_cli(interface_name: &str) -> bool {
         || interface_name.starts_with("wasi:filesystem/")
         || interface_name.starts_with("wasi:sockets/"))
         && interface_name.contains("@0.2.")
+}
+
+struct ConstHostWallClock {}
+
+impl HostWallClock for ConstHostWallClock {
+    fn resolution(&self) -> std::time::Duration {
+        std::time::Duration::from_micros(0)
+    }
+
+    fn now(&self) -> std::time::Duration {
+        std::time::Duration::from_micros(0)
+    }
+}
+
+struct ConstHostMonotonicClock {}
+
+impl HostMonotonicClock for ConstHostMonotonicClock {
+    fn resolution(&self) -> u64 {
+        0
+    }
+
+    fn now(&self) -> u64 {
+        0
+    }
 }
