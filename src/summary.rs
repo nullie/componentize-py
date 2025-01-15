@@ -1834,12 +1834,15 @@ Result = Union[Ok[T], Err[E]]
                     File::create(dir.join(format!("{}.py", name.to_snake_case().escape())))?;
                 let types = code.types.concat();
                 let functions = code.functions.concat();
-                let imports = code
+
+                let mut imports = code
                     .type_imports
                     .union(&code.function_imports)
                     .map(|&interface| import("..", interface))
-                    .collect::<Vec<_>>()
-                    .join("\n");
+                    .collect::<Vec<_>>();
+                imports.sort();
+                let imports = imports.join("\n");
+
                 let docs = docstring(world_module, code.docs, 0, None);
 
                 let imports = if stub_runtime_calls {
