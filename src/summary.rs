@@ -14,7 +14,7 @@ use {
     once_cell::sync,
     semver::Version,
     std::{
-        collections::{hash_map::Entry, HashMap, HashSet},
+        collections::{hash_map::Entry, HashMap, HashSet, BTreeSet},
         fmt::Write as _,
         fs::{self, File},
         io::Write as _,
@@ -1154,8 +1154,8 @@ impl<'a> Summary<'a> {
         struct Definitions<'a> {
             types: Vec<String>,
             functions: Vec<String>,
-            type_imports: HashSet<InterfaceId>,
-            function_imports: HashSet<InterfaceId>,
+            type_imports: BTreeSet<InterfaceId>,
+            function_imports: BTreeSet<InterfaceId>,
             docs: Option<&'a str>,
             alias_module: Option<String>,
         }
@@ -1834,15 +1834,12 @@ Result = Union[Ok[T], Err[E]]
                     File::create(dir.join(format!("{}.py", name.to_snake_case().escape())))?;
                 let types = code.types.concat();
                 let functions = code.functions.concat();
-
-                let mut imports = code
+                let imports = code
                     .type_imports
                     .union(&code.function_imports)
                     .map(|&interface| import("..", interface))
-                    .collect::<Vec<_>>();
-                imports.sort();
-                let imports = imports.join("\n");
-
+                    .collect::<Vec<_>>()
+                    .join("\n");
                 let docs = docstring(world_module, code.docs, 0, None);
 
                 let imports = if stub_runtime_calls {
