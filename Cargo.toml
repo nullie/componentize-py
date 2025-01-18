@@ -48,6 +48,7 @@ serde = { version = "1.0.213", features = ["derive"] }
 toml = "0.8.19"
 semver = "1.0.23"
 rand_pcg = "0.3.1"
+sha256 = "1.5.0"
 
 [dev-dependencies]
 assert_cmd = "2.0.16"
@@ -65,3 +66,6 @@ test-generator = { path = "test-generator" }
 
 [workspace]
 members = ["runtime", "shared", "test-generator"]
+
+[patch."https://github.com/dicej/component-init"]
+component-init = { path = "../component-init" }

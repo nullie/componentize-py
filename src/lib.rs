@@ -1,4 +1,4 @@
-#![deny(warnings)]
+//#![deny(warnings)]
 
 use {
     anyhow::{anyhow, bail, ensure, Context, Error, Result},
@@ -507,6 +507,10 @@ pub async fn componentize(
 
     let mut store = Store::new(&engine, Ctx { wasi, table });
 
+    eprintln!("component = {}", sha256::digest(&component));
+
+    assert!(stubbed_component.is_none());
+
     let app_name = app_name.to_owned();
     let component = component_init::initialize_staged(
         &component,
@@ -514,6 +518,8 @@ pub async fn componentize(
             .as_ref()
             .map(|(component, map)| (component.deref(), map as &dyn Fn(u32) -> u32)),
         move |instrumented| {
+            eprintln!("instrumented = {}", sha256::digest(&instrumented));
+
             async move {
                 let component = &Component::new(&engine, instrumented)?;
                 if !added_to_linker {
